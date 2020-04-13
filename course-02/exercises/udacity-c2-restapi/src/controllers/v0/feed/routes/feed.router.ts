@@ -18,13 +18,51 @@ router.get('/', async (req: Request, res: Response) => {
 
 //@TODO
 //Add an endpoint to GET a specific resource by Primary Key
+router.get('/:id', async (req: Request, res: Response) => {
+        //@TODO try it yourself
+        let { id } = req.params;
+
+        if ( !id ) {
+            return res.status(400)
+                      .send(`id is required`);
+        }
+
+    
+        const item: FeedItem = await FeedItem.findByPk(id);
+
+        if (item) {
+            res.status(200).send(item);
+        }
+        else {
+            res.status(404).send("No such id");
+        }
+
+});
 
 // update a specific resource
-router.patch('/:id', 
-    requireAuth, 
-    async (req: Request, res: Response) => {
+router.patch('/', async (req: Request, res: Response) => {
         //@TODO try it yourself
-        res.send(500).send("not implemented")
+        const id = req.body.id;
+        const caption = req.body.caption;
+
+        if ( !id ) {
+            return res.status(400).send(`id is required`);
+        }
+        if ( !caption ) {
+            return res.status(400).send(`caption is required`);
+        }
+
+        const item: FeedItem = await FeedItem.findByPk(id);
+        if (!item) {
+            res.status(404).send("No such id");
+        }
+
+        item.caption = caption;
+        await item.save();
+
+        // What happens if item.save() fails for some reason?  How do we catch that?
+
+        res.status(200).send("The change has been saved.");
 });
 
 
