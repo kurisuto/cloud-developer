@@ -94,14 +94,14 @@ router.post('/',
         return res.status(400).send({ message: 'File url is required' });
     }
 
-    const item = await new FeedItem({
+    const item = FeedItem.build({
             caption: caption,
             url: fileName
     });
 
     const saved_item = await item.save();
 
-    saved_item.url = AWS.getGetSignedUrl(saved_item.url);
+    saved_item.url = AWS.getPutSignedUrl(saved_item.url);
     res.status(201).send(saved_item);
 });
 
