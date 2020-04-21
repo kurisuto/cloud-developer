@@ -31,6 +31,47 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
 
   //! END @TODO1
   
+  app.get( "/filteredimage", async ( req, res ) => {
+    let { image_url } = req.query;
+
+    // Validate the image_url query
+    if ( !image_url ) {
+      return res.status(400).send(`image_url is required`);
+    }
+
+    // Do a little extra validation.
+    // The URL must start with http:// or https://, and it may not contain any spaces.
+    // This isn't an exhaustive validation on the complex form of URLs, but it'll catch
+    // some of the more common cases.  If there's a further problem with the URL which we 
+    // haven't caught here, filterImageFromURL() will throw an exception.    
+    if (!/^(http|https):\/\/[^ "]+$/.test(image_url)) {
+      return res.status(400).send(`image_url contains an invalid URL`);
+    }
+
+    
+    // Filter the image
+    await filterImageFromURL(image_url)
+    .then( absolute_path => {
+       // If the operation succeeded, send back the results.
+       res.status(200).sendFile(absolute_path);
+
+       // Delete the temporary file after we're done sending it to the client.
+       res.on('finish', function(){
+        deleteLocalFiles([absolute_path]);
+      }); 
+    })
+    .catch(error => {
+      // The choice of 422 (unprocessable entity) as the status code here is arguable, 
+      // because filterImageFromURL() can fail for more than one reason.  However, 
+      // we can't readily distinguish all the failure reasons, and 422 covers at least 
+      // some of the cases.
+      res.status(422).send(error);
+     });
+
+  } );
+
+
+
   // Root Endpoint
   // Displays a simple message to the user
   app.get( "/", async ( req, res ) => {
